@@ -14,10 +14,17 @@ contract DummyNodeOperatorsRegistry {
     uint256 internal constant DEPOSIT_AMOUNT_UNIT = 1000000000 wei;
     bytes32 internal constant WITHDRAWAL_CREDENTIALS = 0x010000000000000000000000b9d7934878b5fb9610b3fe8a5e441e8fad7e293f;
 
+    uint256 constant public TREE_LEAF_AMOUNT = 4;
+
     address public nodeOperator;
     address public governance;
 
     DepositContractMock depositContract;
+
+    struct MerkleRoot {
+        uint256 usedKeys;
+        bytes32 merkleRoot;
+    }
     
     modifier onlyNodeOperator() {
         require(msg.sender == nodeOperator, "AUTH_FAILED");
@@ -33,11 +40,11 @@ contract DummyNodeOperatorsRegistry {
         bytes pubkey;
         bytes signature;
     }
-    
-    PubkeyAndSignature[] public keys; 
-    
-    uint256 public approvedKeys; 
-    uint256 public usedKeys;
+
+    MerkleRoot[] public merkleRoots;
+
+    uint256 public approvedRoots;
+    uint256 public usedRoots;
     
     
     constructor(address _nodeOperator, address _governance, address _depositContract) {
@@ -46,33 +53,43 @@ contract DummyNodeOperatorsRegistry {
         depositContract = DepositContractMock(_depositContract);
     }
     
-    function totalKeys() public view returns (uint256) {
-        return keys.length;
-    }
-
-    function balance1() public view returns (uint256) {
-        return address(this).balance;
+    function totalMerkleRoots() public view returns (uint256) {
+        return merkleRoots.length;
     }
 
     function submit() public payable {}
 
-    function addSigningKey(bytes memory _pubkey, bytes memory _signature) external onlyNodeOperator {
-        // add new pubkey and signature
-        keys.push(PubkeyAndSignature(_pubkey, _signature));
+    function addMerkleRoot(bytes32 root) external onlyNodeOperator {
+        merkleRoots.push(MerkleRoot(0, root));
+    }
+
+   function approveMerkleRoots(uint256 newApprovedMerkleRoots) external onlyGovernance {
+        approvedRoots = newApprovedMerkleRoots;
     }
     
-    function approveSigningKeys(uint256 newApprovedKeys) external onlyGovernance {
-        approvedKeys = newApprovedKeys;
-    }
-    
-    function depositBufferedEther() external {
+    function depositBufferedEther(bytes[] calldata keys, bytes[] calldata signs, bytes32[][] calldata proofs) external {
         // checks that we have next approved key and call:
-        require(usedKeys < approvedKeys);
-        for (uint256 i = usedKeys; i < approvedKeys; ++i) {
-            _stake(keys[i].pubkey, keys[i].signature);
+        require(usedRoots < approvedRoots);
+        require(keys.length == signs.length);
+        require(keys.length == proofs.length);
+        MerkleRoot storage root = merkleRoots[usedRoots];
+        for (uint256 i = 0; i < keys.length; ++i) {
+            require(_verifyMerkleProof(proofs[i], root.merkleRoot, keccak256(abi.encodePacked(root.usedKeys + i, keys[i], signs[i]))));
+            _stake(keys[i], signs[i]);
         }
 
-        usedKeys = approvedKeys;
+        root.usedKeys += keys.length;
+        if(root.usedKeys == TREE_LEAF_AMOUNT){
+            usedRoots += 1;
+        }
+    }
+
+    function testEncode(uint256 num, bytes memory key, bytes memory sign) external pure returns (bytes memory){
+        return abi.encode(num, key, sign);
+    }
+
+    function testEncodePacked(uint256 num, bytes memory key, bytes memory sign) external pure returns (bytes memory){
+        return abi.encodePacked(num, key, sign);
     }
     
    /**
@@ -113,6 +130,31 @@ contract DummyNodeOperatorsRegistry {
             _pubkey, abi.encodePacked(withdrawalCredentials), _signature, depositDataRoot);
         require(address(this).balance == targetBalance, "EXPECTING_DEPOSIT_TO_HAPPEN");
     }
+
+
+    function _verifyMerkleProof(
+        bytes32[] memory proof,
+        bytes32 root,
+        bytes32 leaf
+    ) internal pure returns (bool) {
+        bytes32 computedHash = keccak256(abi.encode(leaf));
+
+        for (uint256 i = 0; i < proof.length; i++) {
+            bytes32 proofElement = proof[i];
+
+            if (computedHash <= proofElement) {
+                // Hash(current computed hash + current element of the proof)
+                computedHash = keccak256(abi.encodePacked(computedHash, proofElement));
+            } else {
+                // Hash(current element of the proof + current computed hash)
+                computedHash = keccak256(abi.encodePacked(proofElement, computedHash));
+            }
+        }
+
+        // Check if the computed hash (root) is equal to the provided root
+        return computedHash == root;
+    }
+
 
     /**
       * @dev Padding memory array with zeroes up to 64 bytes on the right

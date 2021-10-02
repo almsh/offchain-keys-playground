@@ -1,18 +1,43 @@
 import pytest
-
-PUBKEY = '0x86ba17890f9e2190d6d8666124583858fb0c8f3135cc99b3a637ad5ca00b3aabe358e64fb4888554881158105234dea1'
-SIGNATURE = '0x8f486ac2d89e911ece802a9a8a15a537ac0f1f10578b6b3e4db43edda57cf8e7ac87914c51ef89eb8da271d1c2206aee014716b97e6676a3daa699e4672f764787a2d845170c9a7ee37326420c935271b80dee7fc83bd44598d73dd86f53d6f6'
-
-def test_happy_path(node_operator_registry, node_operator, governance, stranger):
-    assert node_operator_registry.totalKeys() == 0
-    node_operator_registry.addSigningKey(PUBKEY, SIGNATURE, {'from': node_operator})
-    assert node_operator_registry.totalKeys() == 1
-    node_operator_registry.approveSigningKeys(1, {'from': governance})
-    assert node_operator_registry.approvedKeys() == 1
-    node_operator_registry.submit({'from':stranger, 'amount': 64 * 10**18})
-    assert node_operator_registry.balance1() > 32 * 10 ** 18
-    tx = node_operator_registry.depositBufferedEther({'from': stranger})
-    assert tx.events['DepositEvent']['pubkey'] == PUBKEY
-    assert tx.events['DepositEvent']['signature'] == SIGNATURE
+from merkle_tree import MerkleTree
+from conftest import Helpers
+from eth_abi import encode_single
+from eth_utils import encode_hex
 
 
+
+def test_encoding(node_operator_registry):
+    tx = node_operator_registry.testEncode(0, '0x01', '0x02')
+    encodedPy = encode_hex(encode_single('(uint256,bytes,bytes)', [0, b'\x01', b'\x02']))
+    assert str(tx) == encodedPy
+
+def test_encode_packed(node_operator_registry):
+    tx = node_operator_registry.testEncodePacked(0, '0x01', '0x02')
+    encodedPy = encode_hex(b''.join([(0).to_bytes(32, 'big'), b'\x01', b'\x02']))
+    assert str(tx) == encodedPy
+
+
+def test_happy_path(node_operator_registry, node_operator, governance, stranger, helpers: Helpers):
+    assert node_operator_registry.totalMerkleRoots() == 0
+
+    keys_and_signs = [(helpers.get_random_pseudo_key(), helpers.get_random_pseudo_sign()) for i in range(0, 4)]
+
+    leafs = [helpers.hash_num_key_sign(i, keys_and_signs[i][0], keys_and_signs[i][1]) for i in range(0, 4)]
+
+    tree = MerkleTree(leafs)
+
+    node_operator_registry.addMerkleRoot(tree.root, {'from': node_operator})
+    assert node_operator_registry.totalMerkleRoots() == 1
+
+    node_operator_registry.approveMerkleRoots(1, {'from': governance})
+    assert node_operator_registry.approvedRoots() == 1
+
+    node_operator_registry.submit({'from':stranger, 'amount': 5 * 32 * 10**18})
+
+    tx = node_operator_registry.depositBufferedEther([ks[0] for ks in keys_and_signs], [ks[1] for ks in keys_and_signs], [tree.get_proof(l) for l in leafs] ,{'from': stranger})
+
+    for i in range(0, 4):
+        assert tx.events['DepositEvent'][i]['pubkey'] == keys_and_signs[i][0]
+        assert tx.events['DepositEvent'][i]['signature'] == keys_and_signs[i][1]
+
+    assert node_operator_registry.usedRoots() == 1

@@ -54,3 +54,18 @@ class MerkleTree:
 
         return root == computedHash
 
+
+if __name__ == "__main__":
+    PUBKEY = '0x86ba17890f9e2190d6d8666124583858fb0c8f3135cc99b3a637ad5ca00b3aabe358e64fb4888554881158105234dea1'
+    SIGNATURE = '0x8f486ac2d89e911ece802a9a8a15a537ac0f1f10578b6b3e4db43edda57cf8e7ac87914c51ef89eb8da271d1c2206aee014716b97e6676a3daa699e4672f764787a2d845170c9a7ee37326420c935271b80dee7fc83bd44598d73dd86f53d6f6'
+
+
+    text_leafs = ['0'+PUBKEY+SIGNATURE, 'world', 'test', 'lex']
+    leafs = [encode_hex(el) for el in text_leafs]
+    tree = MerkleTree(leafs)
+    proof = tree.get_proof(leafs[0])
+    print(proof)
+    if MerkleTree.verify_proof(tree.root, proof, leafs[0]) and not MerkleTree.verify_proof(tree.root, proof, encode_hex('bad leaf')):
+        print('success')
+    else:
+        print('fail')
