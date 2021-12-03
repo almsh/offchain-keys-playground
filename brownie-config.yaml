@@ -6,9 +6,9 @@ networks:
     timeout: 120
     cmd_settings:
       port: 8545
-      gas_limit: 12000000
+      gas_limit: 120000000
       accounts: 10
-      default_balance: 300
+      default_balance: 3000000
       evm_version: istanbul
       mnemonic: brownie
       fork: mainnet

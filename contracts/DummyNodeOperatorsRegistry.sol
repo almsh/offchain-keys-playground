@@ -22,7 +22,7 @@ contract DummyNodeOperatorsRegistry {
     DepositContractMock depositContract;
 
     struct MerkleRoot {
-        uint256 usedKeys;
+        uint256 keysLeft;
         bytes32 merkleRoot;
     }
     
@@ -59,8 +59,8 @@ contract DummyNodeOperatorsRegistry {
 
     function submit() public payable {}
 
-    function addMerkleRoot(bytes32 root) external onlyNodeOperator {
-        merkleRoots.push(MerkleRoot(0, root));
+    function addMerkleRoot(bytes32 root, uint16 keysLeft) external onlyNodeOperator {
+        merkleRoots.push(MerkleRoot(keysLeft, root));
     }
 
    function approveMerkleRoots(uint256 newApprovedMerkleRoots) external onlyGovernance {
@@ -69,17 +69,17 @@ contract DummyNodeOperatorsRegistry {
     
     function depositBufferedEther(bytes[] calldata keys, bytes[] calldata signs, bytes32[][] calldata proofs) external {
         // checks that we have next approved key and call:
-        require(usedRoots < approvedRoots);
+        require(usedRoots <= approvedRoots);
         require(keys.length == signs.length);
         require(keys.length == proofs.length);
         MerkleRoot storage root = merkleRoots[usedRoots];
         for (uint256 i = 0; i < keys.length; ++i) {
-            require(_verifyMerkleProof(proofs[i], root.merkleRoot, keccak256(abi.encodePacked(root.usedKeys + i, keys[i], signs[i]))));
+            require(_verifyMerkleProof(proofs[i], root.merkleRoot, keccak256(abi.encodePacked(root.keysLeft - 1 - i, keys[i], signs[i]))));
             _stake(keys[i], signs[i]);
         }
 
-        root.usedKeys += keys.length;
-        if(root.usedKeys == TREE_LEAF_AMOUNT){
+        root.keysLeft -= keys.length;
+        if(root.keysLeft == 0){
             usedRoots += 1;
         }
     }
