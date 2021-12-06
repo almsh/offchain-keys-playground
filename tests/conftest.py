@@ -4,6 +4,9 @@ from secrets import token_hex
 from eth_utils import encode_hex, to_bytes
 from eth_abi import encode_single
 
+from tests.naive import Naive
+from tests.simple_batch import SimpleBatch
+
 BETH_DECIMALS = 18
 UST_TOKEN = '0xa47c8bf37f92aBed4A126BDA807A7b7498661acD'
 
@@ -57,4 +60,17 @@ class Helpers:
 @pytest.fixture(scope='module')
 def helpers():
     return Helpers
+
+
+@pytest.fixture(scope='module')
+def naive(naive_NOR, node_operator, stranger, helpers: Helpers):
+    return Naive(naive_NOR, node_operator, stranger, helpers)
+
+@pytest.fixture(scope='module')
+def simple_batch_4(simple_batch_4_NOR, node_operator, stranger, helpers: Helpers):
+    return SimpleBatch(simple_batch_4_NOR, node_operator, stranger, helpers, 4)
+
+@pytest.fixture(scope='module')
+def simple_batch_8(simple_batch_8_NOR, node_operator, stranger, helpers: Helpers):
+    return SimpleBatch(simple_batch_8_NOR, node_operator, stranger, helpers, 8)
 
