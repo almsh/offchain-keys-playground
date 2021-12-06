@@ -1,13 +1,13 @@
 import pytest
 from merkle_tree import MerkleTree
-from conftest import Helpers
+from tests.helpers import Helpers
 from math import floor
 from functools import reduce
 
 
 
 
-def test_happy_path(node_operator_registry, node_operator, stranger, helpers: Helpers):
+def tes_happy_path(node_operator_registry, node_operator, stranger, helpers: Helpers):
 
     tree_size = 4
 
@@ -71,7 +71,7 @@ def run_deposit(node_operator_registry, node_operator, stranger, helpers: Helper
 def tx_sum(prev, tx):
     return prev + tx.gas_used
 
-def test_deposits(node_operator_registry, node_operator, stranger, helpers: Helpers):
+def tes_deposits(node_operator_registry, node_operator, stranger, helpers: Helpers):
     for i in range(2, 10):
         tree_size = 2**i
         prices = []

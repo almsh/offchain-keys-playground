@@ -1,6 +1,7 @@
 import pytest
 from tests.helpers import Helpers
 from tests.merkle import Merkle
+from tests.merkle_batch import MerkleBatch
 from tests.naive import Naive
 from tests.simple_batch import SimpleBatch
 
@@ -40,6 +41,10 @@ def simple_batch_8_NOR(deployer, node_operator, deposit_contract, SimpleBatchNOR
 def merkle_NOR(deployer, node_operator, deposit_contract, MerkleNOR):
     return MerkleNOR.deploy(node_operator, deposit_contract.address, {'from': deployer})
 
+@pytest.fixture(scope='module')
+def merkle_batch_NOR(deployer, node_operator, deposit_contract, MerkleBatchNOR):
+    return MerkleBatchNOR.deploy(node_operator, deposit_contract.address, {'from': deployer})
+
 
 @pytest.fixture(scope='module')
 def helpers():
@@ -61,3 +66,7 @@ def simple_batch_8(simple_batch_8_NOR, node_operator, stranger, helpers: Helpers
 @pytest.fixture(scope='module')
 def merkle(merkle_NOR, node_operator, stranger, helpers: Helpers):
     return Merkle(merkle_NOR, node_operator, stranger, helpers)
+
+@pytest.fixture(scope='module')
+def merkle_batch(merkle_batch_NOR, node_operator, stranger, helpers: Helpers):
+    return MerkleBatch(merkle_batch_NOR, node_operator, stranger, helpers)
