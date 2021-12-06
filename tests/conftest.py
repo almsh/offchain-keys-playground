@@ -27,6 +27,19 @@ def deposit_contract(deployer, DepositContractMock):
 def node_operator_registry(deployer, node_operator, deposit_contract, DummyNodeOperatorsRegistry):
     return DummyNodeOperatorsRegistry.deploy(node_operator, deposit_contract.address, {'from': deployer})
 
+@pytest.fixture(scope='module')
+def naive_NOR(deployer, node_operator, deposit_contract, NaiveNOR):
+    return NaiveNOR.deploy(node_operator, deposit_contract.address, {'from': deployer})
+
+@pytest.fixture(scope='module')
+def simple_batch_4_NOR(deployer, node_operator, deposit_contract, SimpleBatchNOR):
+    return SimpleBatchNOR.deploy(node_operator, deposit_contract.address, 4, {'from': deployer})
+
+@pytest.fixture(scope='module')
+def simple_batch_8_NOR(deployer, node_operator, deposit_contract, SimpleBatchNOR):
+    return SimpleBatchNOR.deploy(node_operator, deposit_contract.address, 8, {'from': deployer})
+
+
 class Helpers:
     @staticmethod
     def get_random_pseudo_key():
