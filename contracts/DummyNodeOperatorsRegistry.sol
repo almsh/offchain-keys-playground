@@ -17,7 +17,6 @@ contract DummyNodeOperatorsRegistry {
     uint256 constant public TREE_LEAF_AMOUNT = 4;
 
     address public nodeOperator;
-    address public governance;
 
     DepositContractMock depositContract;
 
@@ -31,11 +30,6 @@ contract DummyNodeOperatorsRegistry {
         _;
     }
     
-    modifier onlyGovernance() {
-        require(msg.sender == governance, "AUTH_FAILED");
-        _;
-    }
-    
     struct PubkeyAndSignature {
         bytes pubkey;
         bytes signature;
@@ -43,13 +37,11 @@ contract DummyNodeOperatorsRegistry {
 
     MerkleRoot[] public merkleRoots;
 
-    uint256 public approvedRoots;
     uint256 public usedRoots;
     
     
-    constructor(address _nodeOperator, address _governance, address _depositContract) {
+    constructor(address _nodeOperator, address _depositContract) {
         nodeOperator = _nodeOperator;
-        governance = _governance;
         depositContract = DepositContractMock(_depositContract);
     }
     
@@ -62,14 +54,8 @@ contract DummyNodeOperatorsRegistry {
     function addMerkleRoot(bytes32 root, uint16 keysLeft) external onlyNodeOperator {
         merkleRoots.push(MerkleRoot(keysLeft, root));
     }
-
-   function approveMerkleRoots(uint256 newApprovedMerkleRoots) external onlyGovernance {
-        approvedRoots = newApprovedMerkleRoots;
-    }
     
     function depositBufferedEther(bytes[] calldata keys, bytes[] calldata signs, bytes32[][] calldata proofs) external {
-        // checks that we have next approved key and call:
-        require(usedRoots <= approvedRoots);
         require(keys.length == signs.length);
         require(keys.length == proofs.length);
         MerkleRoot storage root = merkleRoots[usedRoots];
