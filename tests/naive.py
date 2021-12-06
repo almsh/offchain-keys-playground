@@ -1,9 +1,8 @@
 import pytest
 from functools import reduce
 
+from tests.tx_sum import tx_sum
 
-def tx_sum(prev, tx):
-    return prev + tx.gas_used
 
 class Naive:
     def __init__(self, naive_NOR, node_operator, stranger, helpers):

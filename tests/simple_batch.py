@@ -1,13 +1,10 @@
 import pytest
 from functools import reduce
 from brownie import web3
-from eth_abi import encode_abi
 from math import floor
-from eth_utils import decode_hex, encode_hex
+from eth_utils import decode_hex
 
-
-def tx_sum(prev, tx):
-    return prev + tx.gas_used
+from tests.tx_sum import tx_sum
 
 
 class SimpleBatch:

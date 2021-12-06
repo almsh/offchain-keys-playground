@@ -15,3 +15,8 @@ def test_simple_batch_8_32(simple_batch_8):
     keys_amount = 32
     gas_used = simple_batch_8.deposit(keys_amount)
     print(f'simple batch {keys_amount}: {gas_used/keys_amount}')
+
+def test_merkle_32_4(merkle):
+    keys_amount = 32
+    gas_used = merkle.deposit(keys_amount, 4)
+    print(f'simple batch {keys_amount}: {gas_used/keys_amount}')
