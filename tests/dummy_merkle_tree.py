@@ -1,11 +1,9 @@
 from itertools import zip_longest
 
-from brownie import web3
-from eth_utils import encode_hex, to_bytes
 
 class MerkleTree:
     def __init__(self, elements):
-        self.elements = sorted(set(web3.keccak(hexstr=el) for el in elements))
+        self.elements = sorted(set(elements))
         self.layers = MerkleTree.get_layers(self.elements)
 
     @property
@@ -13,13 +11,12 @@ class MerkleTree:
         return self.layers[-1][0]
 
     def get_proof(self, el):
-        el = web3.keccak(hexstr=el)
         idx = self.elements.index(el)
         proof = []
         for layer in self.layers:
             pair_idx = idx + 1 if idx % 2 == 0 else idx - 1
             if pair_idx < len(layer):
-                proof.append(encode_hex(layer[pair_idx]))
+                proof.append(layer[pair_idx])
             idx //= 2
         return proof
 
@@ -30,10 +27,10 @@ class MerkleTree:
 
         for layer in self.layers:
             if start_index % 2 == 1:
-                proof.append(encode_hex(layer[start_index - 1]))
+                proof.append(layer[start_index - 1])
 
             if end_index % 2 == 0 and len(layer) > end_index + 1:
-                proof.append(encode_hex(layer[end_index + 1]))
+                proof.append(layer[end_index + 1])
 
             start_index //= 2
             end_index //= 2
@@ -42,7 +39,7 @@ class MerkleTree:
 
     @staticmethod
     def sort_elements(elements):
-        return sorted(elements, key=lambda hex_str: web3.keccak(hexstr=hex_str))
+        return sorted(elements)
 
     @staticmethod
     def get_layers(elements):
@@ -64,30 +61,30 @@ class MerkleTree:
             return b
         if b is None:
             return a
-        return web3.keccak(b"".join(sorted([a, b])))
+        return "_".join([str(n) for n in sorted([a, b])])
 
     @staticmethod
     def verify_proof(root, proof, target):
-        computedHash = web3.keccak(hexstr=target)
+        computedHash = target
 
         for proofItem in proof:
-            computedHash = MerkleTree.combined_hash(computedHash, to_bytes(hexstr=proofItem))
+            computedHash = MerkleTree.combined_hash(computedHash, proofItem)
 
         return root == computedHash
 
     @staticmethod
     def verify_slice_proof(root, proof, elements, start):
-        layer = [web3.keccak(hexstr=el) for el in elements]
+        layer = elements
         start_index = start
         end_index = start + len(elements) - 1
         proof_index = 0
         while proof_index < len(proof) or len(layer) > 1:
             if start_index % 2 == 1:
-                layer.insert(0, to_bytes(hexstr=proof[proof_index]))
+                layer.insert(0, proof[proof_index])
                 proof_index += 1
 
             if end_index % 2 == 0:
-                layer.append(to_bytes(hexstr=proof[proof_index]))
+                layer.append(proof[proof_index])
                 proof_index += 1
 
             layer = [
@@ -102,10 +99,9 @@ class MerkleTree:
 
 
 if __name__ == "__main__":
-
-    text_leafs = ['hello', 'world', 'test', 'lex', 'foo', 'bar', 'baz', 'ururu']
-    leafs = MerkleTree.sort_elements([encode_hex(el) for el in text_leafs])
+    text_leafs = ['bar', 'baz', 'foo', 'hello', 'lex', 'test', 'ururu', 'world']
+    leafs = MerkleTree.sort_elements([el for el in text_leafs])
     tree = MerkleTree(leafs)
-    proof = tree.get_slice_proof(7,8)
+    proof = tree.get_slice_proof(3, 8)
     print(proof)
-    print(MerkleTree.verify_slice_proof(tree.root, proof, leafs[7:8], 7))
+    print(MerkleTree.verify_slice_proof(tree.root, proof, text_leafs[3:8], 3))
