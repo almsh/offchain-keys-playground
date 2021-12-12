@@ -64,8 +64,12 @@ def simple_batch_8(simple_batch_8_NOR, node_operator, stranger, helpers: Helpers
     return SimpleBatch(simple_batch_8_NOR, node_operator, stranger, helpers, 8)
 
 @pytest.fixture(scope='module')
-def merkle(merkle_NOR, node_operator, stranger, helpers: Helpers):
-    return Merkle(merkle_NOR, node_operator, stranger, helpers)
+def merkle32(merkle_NOR, node_operator, stranger, helpers: Helpers):
+    return Merkle(merkle_NOR, node_operator, stranger, helpers, 32)
+
+@pytest.fixture(scope='module')
+def merkle128(merkle_NOR, node_operator, stranger, helpers: Helpers):
+    return Merkle(merkle_NOR, node_operator, stranger, helpers, 128)
 
 @pytest.fixture(scope='module')
 def merkle_batch(merkle_batch_NOR, node_operator, stranger, helpers: Helpers):

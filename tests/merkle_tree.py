@@ -5,7 +5,7 @@ from eth_utils import encode_hex, to_bytes
 
 class MerkleTree:
     def __init__(self, elements):
-        self.elements = sorted(set(web3.keccak(hexstr=el) for el in elements))
+        self.elements = [web3.keccak(hexstr=el) for el in elements]
         self.layers = MerkleTree.get_layers(self.elements)
 
     @property
@@ -103,9 +103,9 @@ class MerkleTree:
 
 if __name__ == "__main__":
 
-    text_leafs = ['hello', 'world', 'test', 'lex', 'foo', 'bar', 'baz', 'ururu']
-    leafs = MerkleTree.sort_elements([encode_hex(el) for el in text_leafs])
+    text_leafs = list(range(0,32))
+    leafs = MerkleTree.sort_elements([encode_hex(str(el)) for el in text_leafs])
     tree = MerkleTree(leafs)
-    proof = tree.get_slice_proof(7,8)
+    proof = tree.get_slice_proof(0,1)
     print(proof)
-    print(MerkleTree.verify_slice_proof(tree.root, proof, leafs[7:8], 7))
+    print(MerkleTree.verify_slice_proof(tree.root, proof, leafs[0:1], 0))
