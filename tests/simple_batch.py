@@ -16,7 +16,8 @@ class SimpleBatch:
         self.batch_size = batch_size
 
     def deposit(self, keys_amount):
-        txs = []
+        add_root_txs = []
+        deposit_txs = []
 
         keys_and_signs = [(self.helpers.get_random_pseudo_key(), self.helpers.get_random_pseudo_sign()) for i in range(0, keys_amount)]
 
@@ -36,15 +37,15 @@ class SimpleBatch:
 
 
         tx = self.simple_batch_NOR.addPubkeysAndSignsHashes(hashes, {'from': self.node_operator});
-        txs.append(tx)
+        add_root_txs.append(tx)
 
         self.simple_batch_NOR.submit({'from':self.stranger, 'amount': keys_amount * 32 * 10**18})
 
         tx = self.simple_batch_NOR.depositBufferedEther(keys, signs,{'from': self.stranger})
-        txs.append(tx)
+        deposit_txs.append(tx)
 
         for i in range(0, keys_amount):
             assert tx.events['DepositEvent'][i]['pubkey'] == keys_and_signs[i][0]
             assert tx.events['DepositEvent'][i]['signature'] == keys_and_signs[i][1]
 
-        return reduce(tx_sum, txs, 0)
+        return reduce(tx_sum, add_root_txs, 0), reduce(tx_sum, deposit_txs, 0)

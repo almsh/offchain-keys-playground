@@ -38,11 +38,35 @@ def simple_batch_8_NOR(deployer, node_operator, deposit_contract, SimpleBatchNOR
     return SimpleBatchNOR.deploy(node_operator, deposit_contract.address, 8, {'from': deployer})
 
 @pytest.fixture(scope='module')
-def merkle_NOR(deployer, node_operator, deposit_contract, MerkleNOR):
+def merkle_NOR32(deployer, node_operator, deposit_contract, MerkleNOR):
     return MerkleNOR.deploy(node_operator, deposit_contract.address, {'from': deployer})
 
 @pytest.fixture(scope='module')
-def merkle_batch_NOR(deployer, node_operator, deposit_contract, MerkleBatchNOR):
+def merkle_NOR128(deployer, node_operator, deposit_contract, MerkleNOR):
+    return MerkleNOR.deploy(node_operator, deposit_contract.address, {'from': deployer})
+
+@pytest.fixture(scope='module')
+def merkle_batch_NOR_32_4(deployer, node_operator, deposit_contract, MerkleBatchNOR):
+    return MerkleBatchNOR.deploy(node_operator, deposit_contract.address, {'from': deployer})
+
+@pytest.fixture(scope='module')
+def merkle_batch_NOR_32_8(deployer, node_operator, deposit_contract, MerkleBatchNOR):
+    return MerkleBatchNOR.deploy(node_operator, deposit_contract.address, {'from': deployer})
+
+@pytest.fixture(scope='module')
+def merkle_batch_NOR_64_8(deployer, node_operator, deposit_contract, MerkleBatchNOR):
+    return MerkleBatchNOR.deploy(node_operator, deposit_contract.address, {'from': deployer})
+
+@pytest.fixture(scope='module')
+def merkle_batch_NOR_128_8(deployer, node_operator, deposit_contract, MerkleBatchNOR):
+    return MerkleBatchNOR.deploy(node_operator, deposit_contract.address, {'from': deployer})
+
+@pytest.fixture(scope='module')
+def merkle_batch_NOR_32_16(deployer, node_operator, deposit_contract, MerkleBatchNOR):
+    return MerkleBatchNOR.deploy(node_operator, deposit_contract.address, {'from': deployer})
+
+@pytest.fixture(scope='module')
+def merkle_batch_NOR_64_16(deployer, node_operator, deposit_contract, MerkleBatchNOR):
     return MerkleBatchNOR.deploy(node_operator, deposit_contract.address, {'from': deployer})
 
 
@@ -64,13 +88,33 @@ def simple_batch_8(simple_batch_8_NOR, node_operator, stranger, helpers: Helpers
     return SimpleBatch(simple_batch_8_NOR, node_operator, stranger, helpers, 8)
 
 @pytest.fixture(scope='module')
-def merkle32(merkle_NOR, node_operator, stranger, helpers: Helpers):
-    return Merkle(merkle_NOR, node_operator, stranger, helpers, 32)
+def merkle32(merkle_NOR32, node_operator, stranger, helpers: Helpers):
+    return Merkle(merkle_NOR32, node_operator, stranger, helpers, 32)
 
 @pytest.fixture(scope='module')
-def merkle128(merkle_NOR, node_operator, stranger, helpers: Helpers):
-    return Merkle(merkle_NOR, node_operator, stranger, helpers, 128)
+def merkle128(merkle_NOR128, node_operator, stranger, helpers: Helpers):
+    return Merkle(merkle_NOR128, node_operator, stranger, helpers, 128)
 
 @pytest.fixture(scope='module')
-def merkle_batch(merkle_batch_NOR, node_operator, stranger, helpers: Helpers):
-    return MerkleBatch(merkle_batch_NOR, node_operator, stranger, helpers)
+def merkle_batch_32_4(merkle_batch_NOR_32_4, node_operator, stranger, helpers: Helpers):
+    return MerkleBatch(merkle_batch_NOR_32_4, node_operator, stranger, helpers, 32, 4)
+
+@pytest.fixture(scope='module')
+def merkle_batch_32_8(merkle_batch_NOR_32_8, node_operator, stranger, helpers: Helpers):
+    return MerkleBatch(merkle_batch_NOR_32_8, node_operator, stranger, helpers, 32, 8)
+
+@pytest.fixture(scope='module')
+def merkle_batch_64_8(merkle_batch_NOR_64_8, node_operator, stranger, helpers: Helpers):
+    return MerkleBatch(merkle_batch_NOR_64_8, node_operator, stranger, helpers, 64, 8)
+
+@pytest.fixture(scope='module')
+def merkle_batch_128_8(merkle_batch_NOR_128_8, node_operator, stranger, helpers: Helpers):
+    return MerkleBatch(merkle_batch_NOR_128_8, node_operator, stranger, helpers, 128, 8)
+
+@pytest.fixture(scope='module')
+def merkle_batch_32_16(merkle_batch_NOR_32_16, node_operator, stranger, helpers: Helpers):
+    return MerkleBatch(merkle_batch_NOR_32_16, node_operator, stranger, helpers, 32, 16)
+
+@pytest.fixture(scope='module')
+def merkle_batch_64_16(merkle_batch_NOR_64_16, node_operator, stranger, helpers: Helpers):
+    return MerkleBatch(merkle_batch_NOR_64_16, node_operator, stranger, helpers, 64, 16)

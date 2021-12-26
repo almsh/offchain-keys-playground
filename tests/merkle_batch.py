@@ -11,56 +11,91 @@ def flatten(t):
     return [item for sublist in t for item in sublist]
 
 class MerkleBatch:
-    def __init__(self, merkle_batch_NOR, node_operator, stranger, helpers):
+    def __init__(self, merkle_batch_NOR, node_operator, stranger, helpers, tree_size, batch_size):
         self.merkle_batch_NOR = merkle_batch_NOR
         self.node_operator = node_operator
         self.stranger = stranger
         self.helpers = helpers
+        self.tree_size = tree_size
+        self.batch_size = batch_size
+        self.offset = 0
+        self.add_root()
 
+    @property
+    def total_tree_keys(self):
+        return self.tree_size * self.batch_size
 
-    def deposit(self, batch_size, tree_size, portion):
+    def add_root(self):
+        self.keys_batches = []
+        self.signs_batches = []
 
-        keys_batches = []
-        signs_batches = []
-
-        for i in range(0, tree_size):
-            keys_batches.append([self.helpers.get_random_pseudo_key() for j in range(0, batch_size)])
-            signs_batches.append([self.helpers.get_random_pseudo_sign() for j in range(0, batch_size)])
+        for i in range(0, self.tree_size):
+            self.keys_batches.append([self.helpers.get_random_pseudo_key() for j in range(0, self.batch_size)])
+            self.signs_batches.append([self.helpers.get_random_pseudo_sign() for j in range(0, self.batch_size)])
 
         hashes = []
 
-        for i in range(0, tree_size):
+        for i in range(0, self.tree_size):
             keysSignsBytes = b''.join([i.to_bytes(32, 'big')])
-            for j in range(0, batch_size):
-                keysSignsBytes = b''.join([keysSignsBytes, decode_hex(keys_batches[i][j]), decode_hex(signs_batches[i][j])])
+            for j in range(0, self.batch_size):
+                keysSignsBytes = b''.join([keysSignsBytes, decode_hex(self.keys_batches[i][j]), decode_hex(self.signs_batches[i][j])])
             hash = encode_hex(web3.keccak(keysSignsBytes))
             hashes.append(hash)
 
 
-        tree = MerkleTree(hashes)
+        self.tree = MerkleTree(hashes)
 
-        self.merkle_batch_NOR.addMerkleRoot(tree.root, tree_size, batch_size, {'from': self.node_operator})
+        self.add_root_tx = self.merkle_batch_NOR.addMerkleRoot(self.tree.root, self.tree_size, self.batch_size, {'from': self.node_operator})
+        self.add_root_tx.wait(1)
 
-        self.merkle_batch_NOR.submit({'from': self.stranger, 'amount': tree_size * batch_size * 32 * 10 ** 18})
+        self.merkle_batch_NOR.submit({'from': self.stranger, 'amount': self.tree_size * self.batch_size * 32 * 10 ** 18})
+        self.offset = 0
 
-        keys_batches.reverse()
-        signs_batches.reverse()
-        hashes.reverse()
+    def deposit(self, portion):
 
-        txs = []
-        for i in range(0, floor(tree_size / portion)):
-            start = i * portion
-            end = (i + 1) * portion
-            keys_portion = flatten(keys_batches[start:end])
-            signs_portion = flatten(signs_batches[start:end])
-            tx = self.merkle_batch_NOR.depositBufferedEther(keys_portion,
-                                                            signs_portion,
-                                                            [tree.get_proof(l) for l in hashes[start:end]],
-                                                            {'from': self.stranger})
-            txs.append(tx)
+        batches_to_deposit = portion // self.batch_size
+        add_cost = 0
+        deposit_cost = 0
 
-            for j in range(0, portion):
-                assert tx.events['DepositEvent'][j]['pubkey'] == keys_portion[j]
-                assert tx.events['DepositEvent'][j]['signature'] == signs_portion[j]
+        if batches_to_deposit < self.tree_size and batches_to_deposit > self.tree_size - self.offset:
+            self.deposit_one_tree((self.tree_size - self.offset) * self.batch_size)  # deposit left keys to trigger adding new root
+            return self.deposit_one_tree(portion)
+        elif batches_to_deposit < self.tree_size:
+            return self.deposit_one_tree(portion)
+        elif batches_to_deposit >= self.tree_size and self.offset > 0:
+            self.deposit_one_tree((self.tree_size - self.offset) * self.batch_size)  # deposit left keys to trigger adding new root
 
-        return reduce(tx_sum, txs, 0)
+        for i in range(0, batches_to_deposit // self.tree_size):
+            add, deposit = self.deposit_one_tree(self.total_tree_keys)
+            add_cost += add
+            deposit_cost += deposit
+
+        left_items = batches_to_deposit % self.tree_size
+
+        if left_items > 0:
+            add, deposit = self.deposit_one_tree(left_items * self.batch_size)
+            add_cost += add
+            deposit_cost += deposit
+
+        return add_cost, deposit_cost
+
+    def deposit_one_tree(self, portion):
+        batches_to_deposit = portion // self.batch_size
+        start = self.offset
+        end = self.offset + batches_to_deposit
+        keys_portion = flatten(self.keys_batches[start:end])
+        signs_portion = flatten(self.signs_batches[start:end])
+        deposit_tx = self.merkle_batch_NOR.depositBufferedEther(keys_portion,
+                                                        signs_portion,
+                                                        self.tree.get_slice_proof(start, end),
+                                                        {'from': self.stranger})
+
+        for j in range(0, batches_to_deposit * self.batch_size):
+            assert deposit_tx.events['DepositEvent'][j]['pubkey'] == keys_portion[j]
+            assert deposit_tx.events['DepositEvent'][j]['signature'] == signs_portion[j]
+
+        self.offset += batches_to_deposit
+        if self.offset == self.tree_size:
+            self.add_root()
+
+        return (self.add_root_tx.gas_used, deposit_tx.gas_used)

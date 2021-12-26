@@ -23,7 +23,38 @@ class Merkle:
         self.merkle_NOR.submit({'from': self.stranger, 'amount': self.tree_size * 32 * 10 ** 18}).wait(1)
         self.offset = 0
 
+
     def deposit(self, portion):
+
+        add_cost = 0
+        deposit_cost = 0
+
+        if portion < self.tree_size and portion > self.tree_size - self.offset:
+            self.deposit_one_tree(self.tree_size - self.offset) # deposit left keys to trigger adding new root
+            return self.deposit_one_tree(portion)
+        elif portion < self.tree_size:
+            return self.deposit_one_tree(portion)
+        elif portion >= self.tree_size and self.offset > 0:
+            self.deposit_one_tree(self.tree_size - self.offset) # deposit left keys to trigger adding new root
+
+
+
+        for i in range(0, portion // self.tree_size):
+            add, deposit = self.deposit_one_tree(self.tree_size)
+            add_cost += add
+            deposit_cost += deposit
+
+        left_items = portion % self.tree_size
+
+        if left_items > 0:
+            add, deposit = self.deposit_one_tree(left_items)
+            add_cost += add
+            deposit_cost += deposit
+
+        return add_cost, deposit_cost
+
+
+    def deposit_one_tree(self, portion):
         start = self.offset
         end = portion + self.offset
         keys_and_signs_portion = self.keys_and_signs[start:end]
