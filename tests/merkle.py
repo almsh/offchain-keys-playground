@@ -53,6 +53,9 @@ class Merkle:
 
         return add_cost, deposit_cost
 
+    def deposit_rest_of_the_tree(self):
+        self.deposit_one_tree(self.tree_size - self.offset)  # deposit left keys to trigger adding new root
+
 
     def deposit_one_tree(self, portion):
         start = self.offset

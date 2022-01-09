@@ -2,7 +2,7 @@ import pytest
 
 def print_dict(dict):
     for key in dict:
-        print(f'{key}, {", ".join([str(i) for i in dict[key]])}')
+        print(f'{str(key)}, {", ".join([str(i) for i in dict[key]])}')
 
 def get_naive_costs(naive):
     print("Naive, ", end='')
@@ -86,6 +86,36 @@ def get_merkle_batch_costs(merkle_batch):
     print('')
     return add_root_gas_costs, deposit_gas_costs
 
+
+def tes_merkle32_offsets(merkle32):
+    deposit_costs = {}
+    for j in [2,4,8,16]:
+        deposit_costs[str(j)] = []
+        for i in range(0,8):
+            if i != 0:
+                merkle32.deposit(i)
+            add_cost, deposit_cost = merkle32.deposit(j)
+            deposit_costs[str(j)].append(deposit_cost / j)
+            merkle32.deposit_rest_of_the_tree()
+    print_dict(deposit_costs)
+
+
+def tes_merkle_32(merkle32):
+    i = 4
+    merkle32.deposit(1)
+    add_root_gas, deposit_gas = merkle32.deposit(i)
+    add_root_gas_cost = add_root_gas / ((i // 32 + 1) * 32)
+    deposit_gas_cost = (deposit_gas / i)
+    print(f'Merkle 32 Add {add_root_gas_cost}, deposit {deposit_gas_cost}')
+
+def tes_merkle_batch_32_4(merkle_batch_32_4):
+    merkle_batch = merkle_batch_32_4
+    i = 128
+    add_root_gas, deposit_gas = merkle_batch.deposit(i)
+    add_root_gas_cost = add_root_gas / ((i // merkle_batch.total_tree_keys + 1) * merkle_batch.total_tree_keys)
+    deposit_gas_cost = deposit_gas / i
+    print(f'Batch 32_4 Add {add_root_gas_cost}, deposit {deposit_gas_cost}')
+
 def test_table(naive, simple_batch_4, simple_batch_8, merkle32, merkle128, merkle_batch_32_4, merkle_batch_32_8, merkle_batch_64_8, merkle_batch_128_8, merkle_batch_32_16, merkle_batch_64_16):
     add_root_gas = {}
     deposit_gas = {}
@@ -126,11 +156,11 @@ def test_table(naive, simple_batch_4, simple_batch_8, merkle32, merkle128, merkl
     batch_128_8_add, batch_128_8_deposit = get_merkle_batch_costs(merkle_batch_128_8)
     add_root_gas['batch_128_8'] = batch_128_8_add
     deposit_gas['batch_128_8'] = batch_128_8_deposit
-    
+
     batch_32_16_add, batch_32_16_deposit = get_merkle_batch_costs(merkle_batch_32_16)
     add_root_gas['batch_32_16'] = batch_32_16_add
     deposit_gas['batch_32_16'] = batch_32_16_deposit
-    
+
     batch_64_16_add, batch_64_16_deposit = get_merkle_batch_costs(merkle_batch_64_16)
     add_root_gas['batch_64_16'] = batch_64_16_add
     deposit_gas['batch_64_16'] = batch_64_16_deposit

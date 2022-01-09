@@ -47,27 +47,27 @@ def merkle_NOR128(deployer, node_operator, deposit_contract, MerkleNOR):
 
 @pytest.fixture(scope='module')
 def merkle_batch_NOR_32_4(deployer, node_operator, deposit_contract, MerkleBatchNOR):
-    return MerkleBatchNOR.deploy(node_operator, deposit_contract.address, {'from': deployer})
+    return MerkleBatchNOR.deploy(node_operator, deposit_contract.address, 4, {'from': deployer})
 
 @pytest.fixture(scope='module')
 def merkle_batch_NOR_32_8(deployer, node_operator, deposit_contract, MerkleBatchNOR):
-    return MerkleBatchNOR.deploy(node_operator, deposit_contract.address, {'from': deployer})
+    return MerkleBatchNOR.deploy(node_operator, deposit_contract.address, 8, {'from': deployer})
 
 @pytest.fixture(scope='module')
 def merkle_batch_NOR_64_8(deployer, node_operator, deposit_contract, MerkleBatchNOR):
-    return MerkleBatchNOR.deploy(node_operator, deposit_contract.address, {'from': deployer})
+    return MerkleBatchNOR.deploy(node_operator, deposit_contract.address, 8, {'from': deployer})
 
 @pytest.fixture(scope='module')
 def merkle_batch_NOR_128_8(deployer, node_operator, deposit_contract, MerkleBatchNOR):
-    return MerkleBatchNOR.deploy(node_operator, deposit_contract.address, {'from': deployer})
+    return MerkleBatchNOR.deploy(node_operator, deposit_contract.address, 8, {'from': deployer})
 
 @pytest.fixture(scope='module')
 def merkle_batch_NOR_32_16(deployer, node_operator, deposit_contract, MerkleBatchNOR):
-    return MerkleBatchNOR.deploy(node_operator, deposit_contract.address, {'from': deployer})
+    return MerkleBatchNOR.deploy(node_operator, deposit_contract.address, 16, {'from': deployer})
 
 @pytest.fixture(scope='module')
 def merkle_batch_NOR_64_16(deployer, node_operator, deposit_contract, MerkleBatchNOR):
-    return MerkleBatchNOR.deploy(node_operator, deposit_contract.address, {'from': deployer})
+    return MerkleBatchNOR.deploy(node_operator, deposit_contract.address, 16, {'from': deployer})
 
 
 @pytest.fixture(scope='module')

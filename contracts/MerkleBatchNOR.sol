@@ -5,7 +5,6 @@ import "./BaseNOR.sol";
 contract MerkleBatchNOR is BaseNOR {
     struct MerkleRoot {
         uint256 batchesUsed;
-        uint256 batchSize;
         uint256 size;
         bytes32 merkleRoot;
     }
@@ -13,38 +12,38 @@ contract MerkleBatchNOR is BaseNOR {
     MerkleRoot[] public merkleRoots;
 
     uint256 public usedRoots;
+    uint256 public batchSize;
 
-    constructor(address _nodeOperator, address _depositContract) BaseNOR(_nodeOperator, _depositContract) {}
+    constructor(address _nodeOperator, address _depositContract, uint256 _batchSize) BaseNOR(_nodeOperator, _depositContract) {
+        batchSize = _batchSize;
+    }
 
     function totalMerkleRoots() public view returns (uint256) {
         return merkleRoots.length;
     }
 
-    function addMerkleRoot(bytes32 root, uint256 size, uint256 batchSize) external onlyNodeOperator {
-        merkleRoots.push(MerkleRoot(0, batchSize, size, root));
+    function addMerkleRoot(bytes32 root, uint256 size) external onlyNodeOperator {
+        merkleRoots.push(MerkleRoot(0, size, root));
     }
 
     function depositBufferedEther(bytes[] calldata keys, bytes[] calldata signs, bytes32[] calldata proof) external {
         require(keys.length == signs.length);
         MerkleRoot storage root = merkleRoots[usedRoots];
 
-        uint256 batchesToProcess = keys.length / root.batchSize;
+        uint256 batchesToProcess = keys.length / batchSize;
+        require(keys.length % batchSize == 0);
         bytes32[] memory batchesHashes = new bytes32[](batchesToProcess);
 
         for (uint256 i = 0; i < batchesToProcess; ++i) {
-            uint256 start = root.batchSize * i;
-            uint256 end = root.batchSize * (i + 1);
+            uint256 start = batchSize * i;
+            uint256 end = batchSize * (i + 1);
             batchesHashes[i] = keccak256(abi.encodePacked(root.batchesUsed + i, _hashCountersKeysAndSigns(keys, signs, start, end)));
         }
 
         require(_verifyMerkleProof(root.merkleRoot, proof, batchesHashes, root.batchesUsed));
 
-        for (uint256 i = 0; i < batchesToProcess; ++i) {
-            uint256 start = root.batchSize * i;
-            uint256 end = root.batchSize * (i + 1);
-            for (uint256 j = 0; j < root.batchSize; j++) {
-                _stake(keys[start + j], signs[start + j]);
-            }
+        for (uint256 i = 0; i < keys.length; ++i) {
+            _stake(keys[i], signs[i]);
         }
 
         root.batchesUsed += batchesToProcess;
