@@ -46,6 +46,18 @@ def merkle_NOR128(deployer, node_operator, deposit_contract, MerkleNOR):
     return MerkleNOR.deploy(node_operator, deposit_contract.address, {'from': deployer})
 
 @pytest.fixture(scope='module')
+def merkle_NOR256(deployer, node_operator, deposit_contract, MerkleNOR):
+    return MerkleNOR.deploy(node_operator, deposit_contract.address, {'from': deployer})
+
+@pytest.fixture(scope='module')
+def merkle_NOR512(deployer, node_operator, deposit_contract, MerkleNOR):
+    return MerkleNOR.deploy(node_operator, deposit_contract.address, {'from': deployer})
+
+@pytest.fixture(scope='module')
+def merkle_NOR1024(deployer, node_operator, deposit_contract, MerkleNOR):
+    return MerkleNOR.deploy(node_operator, deposit_contract.address, {'from': deployer})
+
+@pytest.fixture(scope='module')
 def merkle_batch_NOR_32_4(deployer, node_operator, deposit_contract, MerkleBatchNOR):
     return MerkleBatchNOR.deploy(node_operator, deposit_contract.address, 4, {'from': deployer})
 
@@ -94,6 +106,18 @@ def merkle32(merkle_NOR32, node_operator, stranger, helpers: Helpers):
 @pytest.fixture(scope='module')
 def merkle128(merkle_NOR128, node_operator, stranger, helpers: Helpers):
     return Merkle(merkle_NOR128, node_operator, stranger, helpers, 128)
+
+@pytest.fixture(scope='module')
+def merkle256(merkle_NOR256, node_operator, stranger, helpers: Helpers):
+    return Merkle(merkle_NOR256, node_operator, stranger, helpers, 256)
+
+@pytest.fixture(scope='module')
+def merkle512(merkle_NOR512, node_operator, stranger, helpers: Helpers):
+    return Merkle(merkle_NOR512, node_operator, stranger, helpers, 512)
+
+@pytest.fixture(scope='module')
+def merkle1024(merkle_NOR1024, node_operator, stranger, helpers: Helpers):
+    return Merkle(merkle_NOR1024, node_operator, stranger, helpers, 1024)
 
 @pytest.fixture(scope='module')
 def merkle_batch_32_4(merkle_batch_NOR_32_4, node_operator, stranger, helpers: Helpers):

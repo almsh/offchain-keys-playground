@@ -1,5 +1,5 @@
 import pytest
-from merkle_tree import MerkleTree
+from tests.merkle_tree import MerkleTree
 from tests.helpers import Helpers
 from math import floor
 from functools import reduce
