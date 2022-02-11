@@ -54,57 +54,19 @@ def get_simple_batch_8_costs(contract_wrappers: ContractWrappers):
     return add_root_gas_costs, deposit_gas_costs
 
 
-def get_merkle64_costs(contract_wrappers: ContractWrappers):
-    print('Merkle_64, ', end='')
+def get_merkle_costs(contract_wrappers: ContractWrappers, tree_size: int):
+    print(f'Merkle_{str(tree_size)}, ', end='')
     add_root_gas_costs = []
     deposit_gas_costs = []
-    merkle32 = contract_wrappers.create_merkle_wrapper(64)
+    merkle512 = contract_wrappers.create_merkle_wrapper(tree_size)
     for i in [1, 4, 8, 16, 32, 64, 128, 256, 512]:
-        add_root_gas, deposit_gas = merkle32.deposit(i)
-        add_root_gas_costs.append(add_root_gas / 64)
-        deposit_gas_costs.append(deposit_gas / i)
-        print(f'{add_root_gas_costs[-1]} {deposit_gas_costs[-1]}, ', end='')
-    print('')
-    return add_root_gas_costs, deposit_gas_costs
-
-
-def get_merkle128_costs(contract_wrappers: ContractWrappers):
-    print('Merkle_128, ', end='')
-    add_root_gas_costs = []
-    deposit_gas_costs = []
-    merkle128 = contract_wrappers.create_merkle_wrapper(128)
-    for i in [1, 4, 8, 16, 32, 64, 128, 256, 512]:
-        add_root_gas, deposit_gas = merkle128.deposit(i)
-        add_root_gas_costs.append(add_root_gas / 128)
-        deposit_gas_costs.append(deposit_gas / i)
-        print(f'{add_root_gas_costs[-1]} {deposit_gas_costs[-1]}, ', end='')
-    print('')
-    return add_root_gas_costs, deposit_gas_costs
-
-
-def get_merkle256_costs(contract_wrappers: ContractWrappers):
-    print('Merkle_256, ', end='')
-    add_root_gas_costs = []
-    deposit_gas_costs = []
-    merkle256 = contract_wrappers.create_merkle_wrapper(256)
-    for i in [1, 4, 8, 16, 32, 64, 128, 256, 512]:
-        add_root_gas, deposit_gas = merkle256.deposit(i)
-        add_root_gas_costs.append(add_root_gas / 256)
-        deposit_gas_costs.append(deposit_gas / i)
-        print(f'{add_root_gas_costs[-1]} {deposit_gas_costs[-1]}, ', end='')
-    print('')
-    return add_root_gas_costs, deposit_gas_costs
-
-
-def get_merkle512_costs(contract_wrappers: ContractWrappers):
-    print('Merkle_512, ', end='')
-    add_root_gas_costs = []
-    deposit_gas_costs = []
-    merkle512 = contract_wrappers.create_merkle_wrapper(512)
-    for i in [1, 4, 8, 16, 32, 64, 128, 256, 512]:
-        add_root_gas, deposit_gas = merkle512.deposit(i)
-        add_root_gas_costs.append(add_root_gas / 512)
-        deposit_gas_costs.append(deposit_gas / i)
+        if i > tree_size:
+            add_root_gas_costs.append(None)
+            deposit_gas_costs.append(None)
+        else:
+            add_root_gas, deposit_gas = merkle512.deposit(i)
+            add_root_gas_costs.append(add_root_gas / tree_size)
+            deposit_gas_costs.append(deposit_gas / i)
         print(f'{add_root_gas_costs[-1]} {deposit_gas_costs[-1]}, ', end='')
     print('')
     return add_root_gas_costs, deposit_gas_costs
@@ -142,25 +104,11 @@ def test_table(contract_wrappers: ContractWrappers):
     add_root_gas['simple_batch_4'] = simple_batch_4_add
     deposit_gas['simple_batch_4'] = simple_batch_4_deposit
 
-    simple_batch_8_add, simple_batch_8_deposit = get_simple_batch_8_costs(contract_wrappers)
-    add_root_gas['simple_batch_8'] = simple_batch_8_add
-    deposit_gas['simple_batch_8'] = simple_batch_8_deposit
-
-    merkle64_add, merkle64_deposit = get_merkle64_costs(contract_wrappers)
-    add_root_gas['merkle64'] = merkle64_add
-    deposit_gas['merkle64'] = merkle64_deposit
-
-    merkle128_add, merkle128_deposit = get_merkle128_costs(contract_wrappers)
-    add_root_gas['merkle128'] = merkle128_add
-    deposit_gas['merkle128'] = merkle128_deposit
-
-    merkle256_add, merkle256_deposit = get_merkle256_costs(contract_wrappers)
-    add_root_gas['merkle256'] = merkle256_add
-    deposit_gas['merkle256'] = merkle256_deposit
-
-    merkle512_add, merkle512_deposit = get_merkle512_costs(contract_wrappers)
-    add_root_gas['merkle512'] = merkle512_add
-    deposit_gas['merkle512'] = merkle512_deposit
+    for i in range(6, 13):
+        size = 2 ** i
+        merkle_add, merkle_deposit = get_merkle_costs(contract_wrappers, size)
+        add_root_gas[f'merkle{size}'] = merkle_add
+        deposit_gas[f'merkle{size}'] = merkle_deposit
 
     batch_64_8_add, batch_64_8_deposit = get_merkle_batch_costs(contract_wrappers, 64, 8)
     add_root_gas['batch_64_8'] = batch_64_8_add
@@ -173,11 +121,10 @@ def test_table(contract_wrappers: ContractWrappers):
     batch_128_8_add, batch_128_8_deposit = get_merkle_batch_costs(contract_wrappers, 128, 8)
     add_root_gas['batch_128_8'] = batch_128_8_add
     deposit_gas['batch_128_8'] = batch_128_8_deposit
-    
+
     batch_128_16_add, batch_128_16_deposit = get_merkle_batch_costs(contract_wrappers, 128, 16)
     add_root_gas['batch_128_16'] = batch_128_16_add
     deposit_gas['batch_128_16'] = batch_128_16_deposit
-
 
     print('Add root')
     print_dict(add_root_gas)
