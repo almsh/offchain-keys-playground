@@ -19,7 +19,7 @@ contract MerkleNOR is BaseNOR {
         return merkleRoots.length;
     }
 
-    function addMerkleRoot(bytes32 root, uint16 size) external onlyNodeOperator {
+    function addMerkleRoot(bytes32 root, uint256 size) external onlyNodeOperator {
         merkleRoots.push(MerkleRoot(0, size, root));
     }
 
