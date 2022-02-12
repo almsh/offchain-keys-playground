@@ -48,7 +48,6 @@ class MerkleBatch:
         self.add_root_tx = self.merkle_batch_NOR.addMerkleRoot(self.tree.root, self.tree_size, {'from': self.node_operator})
         self.add_root_tx.wait(1)
 
-        self.merkle_batch_NOR.submit({'from': self.stranger, 'amount': self.tree_size * self.batch_size * 32 * 10 ** 18})
         self.offset = 0
 
     def deposit(self, portion):
@@ -86,6 +85,8 @@ class MerkleBatch:
         keys_portion = flatten(self.keys_batches[start:end])
         signs_portion = flatten(self.signs_batches[start:end])
         proof = self.tree.get_slice_proof(start, end)
+        self.merkle_batch_NOR.submit(
+            {'from': self.stranger, 'amount': portion * 32 * 10 ** 18}).wait(1)
         deposit_tx = self.merkle_batch_NOR.depositBufferedEther(keys_portion,
                                                         signs_portion,
                                                         proof,

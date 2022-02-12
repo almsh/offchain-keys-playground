@@ -104,7 +104,11 @@ def test_table(contract_wrappers: ContractWrappers):
     add_root_gas['simple_batch_4'] = simple_batch_4_add
     deposit_gas['simple_batch_4'] = simple_batch_4_deposit
 
-    for i in range(6, 13):
+    simple_batch_8_add, simple_batch_8_deposit = get_simple_batch_8_costs(contract_wrappers)
+    add_root_gas['simple_batch_8'] = simple_batch_8_add
+    deposit_gas['simple_batch_8'] = simple_batch_8_deposit
+
+    for i in range(6, 17):
         size = 2 ** i
         merkle_add, merkle_deposit = get_merkle_costs(contract_wrappers, size)
         add_root_gas[f'merkle{size}'] = merkle_add
