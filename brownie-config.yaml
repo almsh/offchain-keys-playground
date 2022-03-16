@@ -11,7 +11,6 @@ networks:
       default_balance: 3000000
       evm_version: istanbul
       mnemonic: brownie
-      fork: mainnet
 
 dependencies:
   - OpenZeppelin/openzeppelin-contracts@4.3.2
