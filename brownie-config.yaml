@@ -11,12 +11,8 @@ networks:
       default_balance: 3000000
       evm_version: istanbul
       mnemonic: brownie
+      fork: mainnet
 
 dependencies:
   - OpenZeppelin/openzeppelin-contracts@4.3.2
   - GNSPS/solidity-bytes-utils@0.8.0
-
-# path remapping to support OpenZepplin imports with NPM-style path
-compiler:
-  solc:
-    version: 0.8.8
